@@ -1,23 +1,12 @@
 {
   "version": 2,
-  "cli": {
-    "defaultCollection": "@nrwl/react"
-  },
+  "cli": { "defaultCollection": "@nrwl/react" },
   "defaultProject": "shell",
   "generators": {
     "@nrwl/react": {
-      "application": {
-        "style": "scss",
-        "linter": "eslint",
-        "babel": true
-      },
-      "component": {
-        "style": "scss"
-      },
-      "library": {
-        "style": "scss",
-        "linter": "eslint"
-      }
+      "application": { "style": "scss", "linter": "eslint", "babel": true },
+      "component": { "style": "scss" },
+      "library": { "style": "scss", "linter": "eslint" }
     }
   },
   "projects": {
@@ -67,20 +56,14 @@
         },
         "serve": {
           "executor": "@nrwl/web:dev-server",
-          "options": {
-            "buildTarget": "shell:build"
-          },
+          "options": { "buildTarget": "shell:build" },
           "configurations": {
-            "production": {
-              "buildTarget": "shell:build:production"
-            }
+            "production": { "buildTarget": "shell:build:production" }
           }
         },
         "lint": {
           "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["apps/shell/**/*.{ts,tsx,js,jsx}"]
-          }
+          "options": { "lintFilePatterns": ["apps/shell/**/*.{ts,tsx,js,jsx}"] }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -105,15 +88,91 @@
             "devServerTarget": "shell:serve"
           },
           "configurations": {
-            "production": {
-              "devServerTarget": "shell:serve:production"
-            }
+            "production": { "devServerTarget": "shell:serve:production" }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": { "lintFilePatterns": ["apps/shell-e2e/**/*.{js,ts}"] }
+        }
+      }
+    },
+    "buildable-header": {
+      "root": "libs/buildable-header",
+      "sourceRoot": "libs/buildable-header/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/web:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/buildable-header",
+            "tsConfig": "libs/buildable-header/tsconfig.lib.json",
+            "project": "libs/buildable-header/package.json",
+            "entryFile": "libs/buildable-header/src/index.ts",
+            "external": ["react", "react-dom"],
+            "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+            "assets": [
+              {
+                "glob": "libs/buildable-header/README.md",
+                "input": ".",
+                "output": "."
+              }
+            ]
           }
         },
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["apps/shell-e2e/**/*.{js,ts}"]
+            "lintFilePatterns": ["libs/buildable-header/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/buildable-header"],
+          "options": {
+            "jestConfig": "libs/buildable-header/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "buildable-button": {
+      "root": "libs/buildable-button",
+      "sourceRoot": "libs/buildable-button/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/web:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/buildable-button",
+            "tsConfig": "libs/buildable-button/tsconfig.lib.json",
+            "project": "libs/buildable-button/package.json",
+            "entryFile": "libs/buildable-button/src/index.ts",
+            "external": ["react", "react-dom"],
+            "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+            "assets": [
+              {
+                "glob": "libs/buildable-button/README.md",
+                "input": ".",
+                "output": "."
+              }
+            ]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": ["libs/buildable-button/**/*.{ts,tsx,js,jsx}"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/buildable-button"],
+          "options": {
+            "jestConfig": "libs/buildable-button/jest.config.js",
+            "passWithNoTests": true
           }
         }
       }
