@@ -1,7 +1,6 @@
 import styles from './app.module.scss';
 
 import { ReactComponent as Logo } from './logo.svg';
-import star from './star.svg';
 
 import { BuildableButton } from '@buildable-webpack-react/buildable-button';
 import { BuildableHeader } from '@buildable-webpack-react/buildable-header';
