@@ -8,7 +8,7 @@ export interface BuildableHeaderProps {}
 export function BuildableHeader(props: BuildableHeaderProps) {
   return (
     <div>
-      <h1>Welcome to buildable-header!</h1>
+      <h1>Welcome to buildable-header 6!</h1>
     </div>
   );
 }
