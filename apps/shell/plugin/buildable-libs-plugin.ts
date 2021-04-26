@@ -5,13 +5,6 @@ function BuildableLibsPlugin(options) {
   this.options = options;
 }
 
-const defaultOptions: FileServerOptions = {
-  buildTarget: 'shell:build',
-  maxParallel: 3,
-  parallel: true,
-  withDeps: true,
-};
-
 let currentlyRunning: 'none' | 'build-process' | 'webpack' = 'none';
 
 function sleep(time: number) {
@@ -29,7 +22,7 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
   compiler.hooks.beforeCompile.tapAsync(
     'BuildableLibsPlugin',
     async (params, callback) => {
-      console.log('>>>>>> webpack: waiting to compiler');
+      console.log('>>>>>> webpack: waiting to compile');
       while (currentlyRunning !== 'none') await sleep(1000);
       console.log('>>>>>> webpack: compiling');
       currentlyRunning = 'webpack';
@@ -49,43 +42,14 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
 
 module.exports = BuildableLibsPlugin;
 
-export interface FileServerOptions {
-  buildTarget: string;
-  parallel: boolean;
-  maxParallel: number;
-  withDeps: boolean;
-}
-
-function getBuildTargetCommand(opts: FileServerOptions) {
-  const cmd = [`npx nx run ${opts.buildTarget}`];
-  if (opts.withDeps) {
-    cmd.push(`--with-deps`);
-  }
-  if (opts.parallel) {
-    cmd.push(`--parallel`);
-  }
-  if (opts.maxParallel) {
-    cmd.push(`--maxParallel=${opts.maxParallel}`);
-  }
-  return cmd.join(' ');
-}
-
-export default function fileServerExecutor(
-  opts: FileServerOptions = defaultOptions
-) {
+export default function fileServerExecutor() {
   let changed = true;
   let running = false;
 
   //TODO add filter back in
-  // const fileFilter = getIgnoredGlobs(context.root).createFilter();
   watch('libs', { recursive: true }, () => {
     changed = true;
     console.log('>>>>>> libs changed');
-    run();
-  });
-  watch('apps', { recursive: true }, () => {
-    changed = true;
-    console.log('>>>>>> apps changed');
     run();
   });
 
@@ -95,22 +59,16 @@ export default function fileServerExecutor(
       changed = false;
       running = true;
       try {
-        const cmd = getBuildTargetCommand(opts);
-        console.log('++++++ ' + cmd);
         execSync(
           `npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel`,
           {
             stdio: [0, 1, 2],
           }
         );
-        console.log('++++++ two');
-      } catch (e) {
-        console.log('>>>> ERROR 1: ', e);
-      }
+      } catch (e) {}
       running = false;
       currentlyRunning = 'none';
       console.log('>>>>>> build finished');
-      //TODO this timer needs to be outside of the "if"
       setTimeout(() => {
         console.log('>>>>>> build timer fired');
         run();
