@@ -16,10 +16,16 @@
     "baseUrl": ".",
     "paths": {
       "@buildable-webpack-react/buildable-header": [
-        "libs/buildable-header/src/index.ts"
+        "dist/libs/buildable-header",
+        "libs/buildable-header/dist",
+        "libs/buildable-header/build",
+        "libs/buildable-header/public"
       ],
       "@buildable-webpack-react/buildable-button": [
-        "libs/buildable-button/src/index.ts"
+        "dist/libs/buildable-button",
+        "libs/buildable-button/dist",
+        "libs/buildable-button/build",
+        "libs/buildable-button/public"
       ]
     }
   },
