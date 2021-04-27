@@ -5,6 +5,7 @@ function BuildableLibsPlugin(options) {
   this.options = options;
 }
 
+//TODO do I need all of these? or just "build-process" and "none"
 let currentlyRunning: 'none' | 'build-process' | 'webpack' = 'none';
 
 function sleep(time: number) {
@@ -21,6 +22,8 @@ try {
 }
 
 BuildableLibsPlugin.prototype.apply = function (compiler) {
+  //TODO do an initial build outside the plugin
+
   compiler.hooks.beforeCompile.tapAsync(
     'BuildableLibsPlugin',
     async (params, callback) => {
@@ -51,7 +54,6 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
       callback();
     }
   );
-
   compiler.hooks.done.tapAsync(
     'BuildableLibsPlugin',
     async (stats, callback) => {
@@ -68,7 +70,6 @@ async function fileServerExecutor() {
   let changed = true;
   let running = false;
 
-  //TODO add filter back in
   watch('libs', { recursive: true }, async () => {
     changed = true;
     console.log('>>>>>> libs changed');
@@ -86,19 +87,18 @@ async function fileServerExecutor() {
           await invoke(
             `npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel`
           );
-          console.log('++++ finished invoke!');
+          console.log('++++ finished invoke!   ', i);
         }
+        // eslint-disable-next-line no-empty
       } catch (e) {}
       running = false;
-      currentlyRunning = 'none';
       console.log('>>>>>> build finished');
-      setTimeout(async () => {
-        console.log('>>>>>> build timer fired');
+      if (changed) {
         await run();
-      }, 1000);
+      }
+      currentlyRunning = 'none';
     }
   }
-  await run();
 }
 
 function invoke(cmd: string) {

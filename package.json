@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "serve-shell": "tsc -p apps/shell/plugin/tsconfig.json && nx serve shell",
+    "serve-shell": "tsc -p apps/shell/plugin/tsconfig.json && npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel && nx serve shell",
     "nx": "nx",
     "start": "nx serve",
     "build": "nx build",
