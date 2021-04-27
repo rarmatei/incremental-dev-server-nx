@@ -114,9 +114,3 @@ function log(...args) {
         console.debug(...args);
     }
 }
-/*
-Some remaining issues:
-1. it only watches "libs" now - should we watch everything? (it won't work with a custom workspace layout)
-2. needs to accept more options - at least the options for the current @nrwl/web:dev-server (like another custom webpack config)
-3. angular equivalent?
- */
