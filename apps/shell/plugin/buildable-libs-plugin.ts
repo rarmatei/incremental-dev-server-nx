@@ -45,7 +45,11 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       currentlyRunning = 'webpack';
-      callback();
+      console.log('>>>>>> webpack: pausing compilation...');
+      setTimeout(() => {
+        console.log('>>>>>> webpack: resuming compilation...');
+        callback();
+      }, 10000);
     }
   );
   compiler.hooks.done.tapAsync(
@@ -103,6 +107,8 @@ function startWatchingBuildableLibs() {
   }
 }
 
+//TODO for demo: add withLogs, fakeLongWebpack, fakeLongBuildable
+
 function buildAllSync() {
   for (let i = 0; i < 20; i++) {
     execSync(
@@ -123,3 +129,10 @@ function invoke(cmd: string) {
     });
   });
 }
+
+/*
+Some remaining issues:
+1. it only watches "libs" now - should we watch everything? (it won't work with a custom workspace layout)
+2. needs to accept more options - at least the options for the current @nrwl/web:dev-server (like another custom webpack config)
+3. angular equivalent?
+ */
