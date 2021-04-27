@@ -1,62 +1,56 @@
 import watch from 'node-watch';
 import { exec, execSync, spawn } from 'child_process';
 
+const options = {
+  debugLogging: true,
+  debugWebpackThrottlingMs: 0,
+  debugBuildableLibsMultiPasses: 20,
+};
+
 function BuildableLibsPlugin(options) {
   this.options = options;
 }
 
-//TODO do I need all of these? or just "build-process" and "none"
 let currentlyRunning: 'none' | 'build-process' | 'webpack' = 'none';
 
 function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-startWatchingBuildableLibs();
+const buildCmd = `npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel`;
 buildAllSync();
+startWatchingBuildableLibs();
 
 BuildableLibsPlugin.prototype.apply = function (compiler) {
-  //TODO do an initial build outside the plugin
-
   compiler.hooks.beforeCompile.tapAsync(
     'BuildableLibsPlugin',
     async (params, callback) => {
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log(
-        '>>>>>> webpack: waiting to compile - currently running: ',
+      log(
+        '>>>>>> 📂 webpack wants to compile - 🍌 banana held by ',
         currentlyRunning
       );
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       while (currentlyRunning === 'build-process') {
-        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-        console.log('SLEEPING');
-        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+        log('📂 😴 webpack sleeping');
         await sleep(1000);
       }
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>> webpack: compiling');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+      log('>>>>>> 📂 🏋️ webpack: started compilation');
       currentlyRunning = 'webpack';
-      console.log('>>>>>> webpack: pausing compilation...');
-      setTimeout(() => {
-        console.log('>>>>>> webpack: resuming compilation...');
+      if (options.debugWebpackThrottlingMs) {
+        log('>>>>>> 📂 ⌛ webpack: throttling compilation...');
+        setTimeout(() => {
+          log('>>>>>> 📂 👍 webpack: resuming compilation...');
+          callback();
+        }, options.debugWebpackThrottlingMs);
+      } else {
         callback();
-      }, 10000);
+      }
     }
   );
   compiler.hooks.done.tapAsync(
     'BuildableLibsPlugin',
     async (stats, callback) => {
       currentlyRunning = 'none';
-      console.log('>>>>>> webpack: done');
+      log('>>>>>> 📂 ⚡ webpack: done');
       callback();
     }
   );
@@ -70,12 +64,16 @@ function startWatchingBuildableLibs() {
 
   watch('libs', { recursive: true }, async () => {
     changed = true;
-    console.log('>>>>>> libs changed');
+    log('>>>>>> 🧱 🔥 libs changed');
     await run();
   });
 
   async function run() {
-    console.log('>>>>>> running - ', { changed, running, currentlyRunning });
+    log('>>>>>> 🧱 ⌛ buildable process wants to run - ', {
+      changed,
+      running,
+      currentlyRunning,
+    });
     //if something changed and webpack is running, try again later
     if (currentlyRunning === 'webpack') {
       setTimeout(async () => {
@@ -88,18 +86,24 @@ function startWatchingBuildableLibs() {
       changed = false;
       running = true;
       try {
-        for (let i = 0; i < 20; i++) {
-          await invoke(
-            `npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel`
-          );
-          console.log('++++ finished invoke!   ', i);
+        if (options.debugBuildableLibsMultiPasses) {
+          for (let i = 0; i < options.debugBuildableLibsMultiPasses; i++) {
+            await invokeAsync(buildCmd);
+            log('>>> 🧱 finished invocation pass: ', i);
+          }
+        } else {
+          await invokeAsync(buildCmd);
         }
+
         // eslint-disable-next-line no-empty
       } catch (e) {}
       running = false;
-      console.log('>>>>>> build finished');
+      log('>>>>>> 🧱 build finished 👍');
       //if something changed in the meantime, immediately re-build before re-triggering the webpack hook
       if (changed) {
+        log(
+          '>>>>>> 🧱 😱 file was changed while building. Triggering another build.'
+        );
         await run();
       }
       currentlyRunning = 'none';
@@ -107,21 +111,13 @@ function startWatchingBuildableLibs() {
   }
 }
 
-//TODO for demo: add withLogs, fakeLongWebpack, fakeLongBuildable
-
 function buildAllSync() {
-  for (let i = 0; i < 20; i++) {
-    execSync(
-      `npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel`,
-      {
-        stdio: [0, 1, 2],
-      }
-    );
-    console.log('++++ finished initial build!   ', i);
-  }
+  execSync(buildCmd, {
+    stdio: [0, 1, 2],
+  });
 }
 
-function invoke(cmd: string) {
+function invokeAsync(cmd: string) {
   return new Promise((resolve) => {
     //TODO make this output to stdout
     exec(cmd, (error, stdout, stderr) => {
@@ -130,6 +126,14 @@ function invoke(cmd: string) {
   });
 }
 
+function log(...args: any[]) {
+  if (options.debugLogging) {
+    console.debug(...args);
+  }
+}
+
+//TODO extract into executor
+//TODO push to github
 /*
 Some remaining issues:
 1. it only watches "libs" now - should we watch everything? (it won't work with a custom workspace layout)
