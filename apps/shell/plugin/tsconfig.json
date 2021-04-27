@@ -7,5 +7,5 @@
     "noImplicitAny": false,
     "noImplicitThis": false
   },
-  "files": ["buildable-libs-plugin.ts"]
+  "files": ["incremental-dev-server-plugin.ts"]
 }
