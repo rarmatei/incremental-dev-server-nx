@@ -51,7 +51,6 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       currentlyRunning = 'webpack';
-      callback();
     }
   );
   compiler.hooks.done.tapAsync(
@@ -78,7 +77,14 @@ async function fileServerExecutor() {
 
   async function run() {
     console.log('>>>>>> running - ', { changed, running, currentlyRunning });
-    if (changed && !running && currentlyRunning !== 'webpack') {
+    //if something changed and webpack is running, try again later
+    if (currentlyRunning === 'webpack') {
+      setTimeout(async () => {
+        await run();
+      }, 1000);
+      return;
+    }
+    if (changed && !running) {
       currentlyRunning = 'build-process';
       changed = false;
       running = true;
@@ -93,6 +99,7 @@ async function fileServerExecutor() {
       } catch (e) {}
       running = false;
       console.log('>>>>>> build finished');
+      //if something changed in the meantime, immediately re-build before re-triggering the webpack hook
       if (changed) {
         await run();
       }
@@ -104,6 +111,7 @@ async function fileServerExecutor() {
 function invoke(cmd: string) {
   return new Promise((resolve) => {
     exec(cmd, (error, stdout, stderr) => {
+      //TODO do I need to fwd these?
       resolve(stdout);
     });
   });
