@@ -1,13 +1,13 @@
 import watch from 'node-watch';
 import { exec, execSync, spawn } from 'child_process';
 
-const options = {
+const debugOptions = {
   debugLogging: true,
   debugWebpackThrottlingMs: 0,
   debugBuildableLibsMultiPasses: 20,
 };
 
-function BuildableLibsPlugin(options) {
+function IncrementalDevServerPlugin(options) {
   this.options = options;
 }
 
@@ -21,9 +21,9 @@ const buildCmd = `npx nx run-many --target=build --projects=buildable-header,bui
 buildAllSync();
 startWatchingBuildableLibs();
 
-BuildableLibsPlugin.prototype.apply = function (compiler) {
+IncrementalDevServerPlugin.prototype.apply = function (compiler) {
   compiler.hooks.beforeCompile.tapAsync(
-    'BuildableLibsPlugin',
+    'IncrementalDevServerPlugin',
     async (params, callback) => {
       log(
         '>>>>>> 📂 webpack wants to compile - 🍌 banana held by ',
@@ -35,19 +35,19 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
       }
       log('>>>>>> 📂 🏋️ webpack: started compilation');
       currentlyRunning = 'webpack';
-      if (options.debugWebpackThrottlingMs) {
+      if (debugOptions.debugWebpackThrottlingMs) {
         log('>>>>>> 📂 ⌛ webpack: throttling compilation...');
         setTimeout(() => {
           log('>>>>>> 📂 👍 webpack: resuming compilation...');
           callback();
-        }, options.debugWebpackThrottlingMs);
+        }, debugOptions.debugWebpackThrottlingMs);
       } else {
         callback();
       }
     }
   );
   compiler.hooks.done.tapAsync(
-    'BuildableLibsPlugin',
+    'IncrementalDevServerPlugin',
     async (stats, callback) => {
       currentlyRunning = 'none';
       log('>>>>>> 📂 ⚡ webpack: done');
@@ -56,7 +56,7 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
   );
 };
 
-module.exports = BuildableLibsPlugin;
+module.exports = IncrementalDevServerPlugin;
 
 function startWatchingBuildableLibs() {
   let changed = true;
@@ -86,8 +86,8 @@ function startWatchingBuildableLibs() {
       changed = false;
       running = true;
       try {
-        if (options.debugBuildableLibsMultiPasses) {
-          for (let i = 0; i < options.debugBuildableLibsMultiPasses; i++) {
+        if (debugOptions.debugBuildableLibsMultiPasses) {
+          for (let i = 0; i < debugOptions.debugBuildableLibsMultiPasses; i++) {
             await invokeAsync(buildCmd);
             log('>>> 🧱 finished invocation pass: ', i);
           }
@@ -127,13 +127,11 @@ function invokeAsync(cmd: string) {
 }
 
 function log(...args: any[]) {
-  if (options.debugLogging) {
+  if (debugOptions.debugLogging) {
     console.debug(...args);
   }
 }
 
-//TODO extract into executor
-//TODO push to github
 /*
 Some remaining issues:
 1. it only watches "libs" now - should we watch everything? (it won't work with a custom workspace layout)
