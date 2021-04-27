@@ -12,14 +12,8 @@ function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-console.log('++++ calling file executor up here');
-try {
-  fileServerExecutor().then(() => {
-    console.log('+++ finished initial serve');
-  });
-} catch (e) {
-  console.log('>>>> ERROR: ', e);
-}
+startWatchingBuildableLibs();
+buildAllSync();
 
 BuildableLibsPlugin.prototype.apply = function (compiler) {
   //TODO do an initial build outside the plugin
@@ -51,6 +45,7 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
       currentlyRunning = 'webpack';
+      callback();
     }
   );
   compiler.hooks.done.tapAsync(
@@ -65,7 +60,7 @@ BuildableLibsPlugin.prototype.apply = function (compiler) {
 
 module.exports = BuildableLibsPlugin;
 
-async function fileServerExecutor() {
+function startWatchingBuildableLibs() {
   let changed = true;
   let running = false;
 
@@ -108,10 +103,22 @@ async function fileServerExecutor() {
   }
 }
 
+function buildAllSync() {
+  for (let i = 0; i < 20; i++) {
+    execSync(
+      `npx nx run-many --target=build --projects=buildable-header,buildable-button --parallel`,
+      {
+        stdio: [0, 1, 2],
+      }
+    );
+    console.log('++++ finished initial build!   ', i);
+  }
+}
+
 function invoke(cmd: string) {
   return new Promise((resolve) => {
+    //TODO make this output to stdout
     exec(cmd, (error, stdout, stderr) => {
-      //TODO do I need to fwd these?
       resolve(stdout);
     });
   });

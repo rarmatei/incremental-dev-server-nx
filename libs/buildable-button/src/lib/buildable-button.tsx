@@ -8,7 +8,7 @@ export interface BuildableButtonProps {}
 export function BuildableButton(props: BuildableButtonProps) {
   return (
     <div>
-      <h1>Welcome to buildable-button 4!</h1>
+      <h1>Welcome to buildable-button 6!</h1>
     </div>
   );
 }
